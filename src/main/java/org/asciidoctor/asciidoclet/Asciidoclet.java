@@ -20,13 +20,13 @@ import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
 import jdk.javadoc.doclet.StandardDoclet;
 
+import javax.lang.model.SourceVersion;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-import javax.lang.model.SourceVersion;
 
 /**
  * = Asciidoclet
@@ -143,15 +143,15 @@ import javax.lang.model.SourceVersion;
  * .An example table
  * |===
  * |Column 1 |Column 2 |Column 3
- * 
+ *
  * |1
  * |Item 1
  * |a
- * 
+ *
  * |2
  * |Item 2
  * |b
- * 
+ *
  * |3
  * |Item 3
  * |c
@@ -174,10 +174,9 @@ import javax.lang.model.SourceVersion;
  * @since 0.1.0
  * @serial (or @serialField or @serialData)
  */
-public class Asciidoclet implements Doclet
-{
+public class Asciidoclet implements Doclet {
 
-    private StandardDoclet standardDoclet;
+    private final StandardDoclet standardDoclet;
     private DocletOptions docletOptions;
     private Stylesheets stylesheets;
     private Reporter reporter;
@@ -187,55 +186,47 @@ public class Asciidoclet implements Doclet
     }
 
     @Override
-    public void init( Locale locale, Reporter reporter )
-    {
+    public void init(Locale locale, Reporter reporter) {
         this.reporter = reporter;
-        standardDoclet.init( locale, reporter );
-        this.docletOptions = new DocletOptions( reporter );
-        this.stylesheets = new Stylesheets( reporter );
+        standardDoclet.init(locale, reporter);
+        this.docletOptions = new DocletOptions(reporter);
+        this.stylesheets = new Stylesheets(reporter);
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return "Asciidoclet";
     }
 
     @Override
-    public Set<? extends Option> getSupportedOptions()
-    {
-        Set<Option> options = new HashSet<>( standardDoclet.getSupportedOptions() );
-        Arrays.stream( AsciidocletOptions.values() ).map( o -> new OptionProcessor( o, docletOptions ) ).forEach( options::add );
+    public Set<? extends Option> getSupportedOptions() {
+        Set<Option> options = new HashSet<>(standardDoclet.getSupportedOptions());
+        Arrays.stream(AsciidocletOptions.values()).map(o -> new OptionProcessor(o, docletOptions)).forEach(options::add);
         return options;
     }
 
     @Override
-    public SourceVersion getSupportedSourceVersion()
-    {
+    public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.RELEASE_11;
     }
 
     @Override
-    public boolean run( DocletEnvironment environment )
-    {
+    public boolean run(DocletEnvironment environment) {
         docletOptions.validateOptions();
-        AsciidoctorRenderer renderer = new AsciidoctorRenderer( docletOptions, reporter );
+        AsciidoctorRenderer renderer = new AsciidoctorRenderer(docletOptions, reporter);
         boolean result;
-        try ( AsciidoctorFilteredEnvironment env = new AsciidoctorFilteredEnvironment( environment, renderer ) )
-        {
-            result = standardDoclet.run( env );
+        try (AsciidoctorFilteredEnvironment env = new AsciidoctorFilteredEnvironment(environment, renderer)) {
+            result = standardDoclet.run(env);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
-        }
-        return result && postProcess( environment );
+        return result && postProcess(environment);
     }
 
-    private boolean postProcess( DocletEnvironment environment ) {
+    private boolean postProcess(DocletEnvironment environment) {
         if (docletOptions.stylesheet().isPresent()) {
             return true;
         }
-        return stylesheets.copy( environment );
+        return stylesheets.copy(environment);
     }
 }

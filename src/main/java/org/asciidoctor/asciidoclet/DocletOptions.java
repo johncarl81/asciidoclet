@@ -30,8 +30,7 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 /**
  * Provides an interface to the doclet options we are interested in.
  */
-public class DocletOptions
-{
+public class DocletOptions {
 
     private final Reporter reporter;
 
@@ -40,116 +39,99 @@ public class DocletOptions
     private File stylesheet;
     private File attributesFile;
     private String gemPath;
-    private List<String> requires;
+    private final List<String> requires;
     private Charset encoding;
-    private List<String> attributes;
+    private final List<String> attributes;
 
-    public DocletOptions( Reporter reporter )
-    {
+    public DocletOptions(Reporter reporter) {
         this.reporter = reporter;
         requires = new ArrayList<>();
         encoding = Charset.defaultCharset();
         attributes = new ArrayList<>();
     }
 
-    void collect( AsciidocletOptions option, List<String> list )
-    {
-        switch ( option )
-        {
-        case BASEDIR:
-            basedir = new File( list.get( 0 ) );
-            break;
-        case OVERVIEW:
-            overview = new File( list.get( 0 ) );
-            break;
-        case STYLESHEET:
-            stylesheet = new File( list.get( 0 ) );
-            break;
-        case ENCODING:
-            encoding = Charset.forName( list.get( 0 ) );
-            break;
-        case ATTRIBUTE:
-            splitTrimStream( list ).forEach( attributes::add );
-            break;
-        case ATTRIBUTES_FILE:
-            attributesFile = new File( list.get( 0 ) );
-            break;
-        case GEM_PATH:
-            gemPath = list.get( 0 );
-        case REQUIRE:
-        case REQUIRE_LONG:
-            splitTrimStream( list ).forEach( requires::add );
-            break;
+    void collect(AsciidocletOptions option, List<String> list) {
+        switch (option) {
+            case BASEDIR:
+                basedir = new File(list.get(0));
+                break;
+            case OVERVIEW:
+                overview = new File(list.get(0));
+                break;
+            case STYLESHEET:
+                stylesheet = new File(list.get(0));
+                break;
+            case ENCODING:
+                encoding = Charset.forName(list.get(0));
+                break;
+            case ATTRIBUTE:
+                splitTrimStream(list).forEach(attributes::add);
+                break;
+            case ATTRIBUTES_FILE:
+                attributesFile = new File(list.get(0));
+                break;
+            case GEM_PATH:
+                gemPath = list.get(0);
+            case REQUIRE:
+            case REQUIRE_LONG:
+                splitTrimStream(list).forEach(requires::add);
+                break;
         }
     }
 
-    private Stream<String> splitTrimStream( List<String> list )
-    {
+    private Stream<String> splitTrimStream(List<String> list) {
         return list.stream()
-                .flatMap( s -> Arrays.stream( s.split( "\\s*,\\s*" ) ) )
-                .map( String::trim )
-                .filter( s -> !s.isEmpty() );
+                .flatMap(s -> Arrays.stream(s.split("\\s*,\\s*")))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty());
     }
 
-    void validateOptions()
-    {
-        if ( baseDir().isEmpty() )
-        {
-            reporter.print( WARNING, AsciidocletOptions.BASEDIR + " must be present for includes or file reference features to work properly." );
+    void validateOptions() {
+        if (baseDir().isEmpty()) {
+            reporter.print(WARNING, AsciidocletOptions.BASEDIR + " must be present for includes or file reference features to work properly.");
         }
 
         Optional<File> attrsFile = attributesFile();
-        if ( attrsFile.isPresent() && !attrsFile.get().canRead() )
-        {
-            reporter.print( WARNING, "Cannot read attributes file " + attrsFile.get() );
+        if (attrsFile.isPresent() && !attrsFile.get().canRead()) {
+            reporter.print(WARNING, "Cannot read attributes file " + attrsFile.get());
         }
     }
 
-    Optional<File> overview()
-    {
-        return Optional.ofNullable( overview );
+    Optional<File> overview() {
+        return Optional.ofNullable(overview);
     }
 
-    Optional<File> stylesheet()
-    {
-        return Optional.ofNullable( stylesheet );
+    Optional<File> stylesheet() {
+        return Optional.ofNullable(stylesheet);
     }
 
-    Optional<File> baseDir()
-    {
-        return Optional.ofNullable( basedir );
+    Optional<File> baseDir() {
+        return Optional.ofNullable(basedir);
     }
 
-    Charset encoding()
-    {
+    Charset encoding() {
         return encoding;
     }
 
-    List<String> attributes()
-    {
+    List<String> attributes() {
         return attributes;
     }
 
-    Optional<File> attributesFile()
-    {
-        if ( attributesFile == null )
-        {
+    Optional<File> attributesFile() {
+        if (attributesFile == null) {
             return Optional.empty();
         }
-        if ( !attributesFile.isAbsolute() && baseDir().isPresent() )
-        {
-            return Optional.of( new File( baseDir().get(), attributesFile.getPath() ) );
+        if (!attributesFile.isAbsolute() && baseDir().isPresent()) {
+            return Optional.of(new File(baseDir().get(), attributesFile.getPath()));
         }
-        return Optional.of( attributesFile );
+        return Optional.of(attributesFile);
     }
 
-    String gemPath()
-    {
+    String gemPath() {
         return gemPath;
     }
 
-    List<String> requires()
-    {
+    List<String> requires() {
         return requires;
     }
 }

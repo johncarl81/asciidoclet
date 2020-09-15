@@ -28,64 +28,22 @@ import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.of;
 
-class JavadocParser
-{
+class JavadocParser {
     private static final String[] DELIMITERS = {"====", "////", "```", "----", "....", "--", "____", "****", "|==="};
     private static final Pattern DELIMITER_OR_TAG =
-            compile( "(^\\s*)((" + of( DELIMITERS ).map( Pattern::quote ).collect( joining( ")|(" )) + ")|@)", MULTILINE );
-    @SuppressWarnings( "unchecked" )
-    private static final Map<String,Pattern> DELIMITER_PATTERNS = Map.ofEntries( of( DELIMITERS ).map(
-            k -> Map.entry( k, compile( "(^\\s*)" + quote( k ), MULTILINE ) ) ).toArray( Map.Entry[]::new ) );
-    private static final Pattern TAG_NAME = compile( "\\G(\\w+)\\s*" );
-
-    static class Tag {
-        String tagName;
-        String tagText;
-
-        Tag( String tagName, String tagText )
-        {
-            this.tagName = tagName;
-            this.tagText = tagText;
-        }
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o )
-            {
-                return true;
-            }
-            if ( o == null || getClass() != o.getClass() )
-            {
-                return false;
-            }
-            Tag tag = (Tag) o;
-            return tagName.equals( tag.tagName ) && Objects.equals( tagText, tag.tagText );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( tagName, tagText );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Tag{" + "tagName='" + tagName + '\'' + ", tagText='" + tagText + '\'' + '}';
-        }
-    }
-
+            compile("(^\\s*)((" + of(DELIMITERS).map(Pattern::quote).collect(joining(")|(")) + ")|@)", MULTILINE);
+    @SuppressWarnings("unchecked")
+    private static final Map<String, Pattern> DELIMITER_PATTERNS = Map.ofEntries(of(DELIMITERS).map(
+            k -> Map.entry(k, compile("(^\\s*)" + quote(k), MULTILINE))).toArray(Map.Entry[]::new));
+    private static final Pattern TAG_NAME = compile("\\G(\\w+)\\s*");
     /**
      * The full comment string, with both text and tags.
      */
     private final String commentString;
-
     /**
      * Sorted comments with different tags.
      */
     private final List<Tag> tags = new ArrayList<>();
-
     /**
      * The body of the javadoc text, without the tags.
      */
@@ -97,11 +55,10 @@ class JavadocParser
      */
     JavadocParser(String commentString) {
         this.commentString = commentString;
-        parseComment( commentString );
+        parseComment(commentString);
     }
 
-    private void parseComment( String commentString )
-    {
+    private void parseComment(String commentString) {
         // We parse the text through a state machine that roughly looks like this:
         //
         //      javadoc -> body tag*
@@ -115,44 +72,35 @@ class JavadocParser
         // and block delimiters must stand alone on their lines.
         // This restriction removes a lot of otherwise subtle edge cases from the parsing.
 
-        Matcher matcher = DELIMITER_OR_TAG.matcher( commentString );
+        Matcher matcher = DELIMITER_OR_TAG.matcher(commentString);
         int captureSince = 0;
-        while ( matcher.find() )
-        {
-            String group = matcher.group( 2 );
-            if ( group.equals("@"))
-            {
+        while (matcher.find()) {
+            String group = matcher.group(2);
+            if (group.equals("@")) {
                 int startOfMatch = matcher.start();
-                captureComponent( commentString, captureSince, startOfMatch );
-                matcher.usePattern( TAG_NAME );
-                if ( matcher.find() )
-                {
-                    Tag tag = new Tag( group + matcher.group( 1 ), null );
-                    tags.add( tag );
+                captureComponent(commentString, captureSince, startOfMatch);
+                matcher.usePattern(TAG_NAME);
+                if (matcher.find()) {
+                    Tag tag = new Tag(group + matcher.group(1), null);
+                    tags.add(tag);
                     captureSince = matcher.end();
                 }
-                matcher.usePattern( DELIMITER_OR_TAG );
-            }
-            else
-            {
-                matcher.usePattern( DELIMITER_PATTERNS.get( group ) );
+                matcher.usePattern(DELIMITER_OR_TAG);
+            } else {
+                matcher.usePattern(DELIMITER_PATTERNS.get(group));
                 matcher.find();
-                matcher.usePattern( DELIMITER_OR_TAG );
+                matcher.usePattern(DELIMITER_OR_TAG);
             }
         }
-        captureComponent( commentString, captureSince, commentString.length() );
+        captureComponent(commentString, captureSince, commentString.length());
     }
 
-    private void captureComponent( String commentString, int captureSince, int endOfCapture )
-    {
-        String component = commentString.substring( captureSince, endOfCapture ).trim();
-        if ( commentBody == null )
-        {
+    private void captureComponent(String commentString, int captureSince, int endOfCapture) {
+        String component = commentString.substring(captureSince, endOfCapture).trim();
+        if (commentBody == null) {
             commentBody = component;
-        }
-        else
-        {
-            tags.get( tags.size() - 1 ).tagText = component;
+        } else {
+            tags.get(tags.size() - 1).tagText = component;
         }
     }
 
@@ -168,5 +116,37 @@ class JavadocParser
      */
     List<Tag> tags() {
         return tags;
+    }
+
+    static class Tag {
+        String tagName;
+        String tagText;
+
+        Tag(String tagName, String tagText) {
+            this.tagName = tagName;
+            this.tagText = tagText;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Tag tag = (Tag) o;
+            return tagName.equals(tag.tagName) && Objects.equals(tagText, tag.tagText);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tagName, tagText);
+        }
+
+        @Override
+        public String toString() {
+            return "Tag{" + "tagName='" + tagName + '\'' + ", tagText='" + tagText + '\'' + '}';
+        }
     }
 }

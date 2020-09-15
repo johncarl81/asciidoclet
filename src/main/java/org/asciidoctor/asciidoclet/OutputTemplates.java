@@ -17,6 +17,7 @@ package org.asciidoctor.asciidoclet;
 
 import jdk.javadoc.doclet.Reporter;
 
+import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,72 +25,57 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import javax.tools.Diagnostic;
 
 /**
  * Sets up a temporary directory containing output templates for use by Asciidoctor.
  */
-class OutputTemplates
-{
+class OutputTemplates {
     private static final String[] TEMPLATE_NAMES = new String[]{"section.html.haml", "paragraph.html.haml"};
 
     private final Path templateDir;
 
-    private OutputTemplates( Path templateDir )
-    {
+    private OutputTemplates(Path templateDir) {
         this.templateDir = templateDir;
     }
 
-    static Optional<OutputTemplates> create( Reporter errorReporter )
-    {
-        Path dir = prepareTemplateDir( errorReporter );
-        return Optional.ofNullable( dir ).map( OutputTemplates::new );
+    static Optional<OutputTemplates> create(Reporter errorReporter) {
+        Path dir = prepareTemplateDir(errorReporter);
+        return Optional.ofNullable(dir).map(OutputTemplates::new);
     }
 
-    Path templateDir()
-    {
-        return templateDir;
-    }
-
-    void delete() throws IOException
-    {
-        for ( String templateName : TEMPLATE_NAMES )
-        {
-            Files.deleteIfExists( templateDir.resolve( templateName ) );
-        }
-        Files.delete( templateDir );
-    }
-
-    private static Path prepareTemplateDir( Reporter errorReporter )
-    {
+    private static Path prepareTemplateDir(Reporter errorReporter) {
         // copy our template resources to the templateDir so Asciidoctor can use them.
-        try
-        {
-            Path templateDir = Files.createTempDirectory( "asciidoclet" );
-            for ( String templateName : TEMPLATE_NAMES )
-            {
-                prepareTemplate( templateDir, templateName );
+        try {
+            Path templateDir = Files.createTempDirectory("asciidoclet");
+            for (String templateName : TEMPLATE_NAMES) {
+                prepareTemplate(templateDir, templateName);
             }
             return templateDir;
-        }
-        catch ( IOException e )
-        {
-            errorReporter.print( Diagnostic.Kind.WARNING, "Failed to prepare templates: " + e.getLocalizedMessage() );
+        } catch (IOException e) {
+            errorReporter.print(Diagnostic.Kind.WARNING, "Failed to prepare templates: " + e.getLocalizedMessage());
             return null;
         }
     }
 
-    private static void prepareTemplate( Path templateDir, String template ) throws IOException
-    {
-        URL src = OutputTemplates.class.getClassLoader().getResource( "templates/" + template );
-        if ( src == null )
-        {
-            throw new IOException( "Could not find template " + template );
+    private static void prepareTemplate(Path templateDir, String template) throws IOException {
+        URL src = OutputTemplates.class.getClassLoader().getResource("templates/" + template);
+        if (src == null) {
+            throw new IOException("Could not find template " + template);
         }
-        Path path = templateDir.resolve( template );
-        try ( InputStream input = src.openStream(); OutputStream output = Files.newOutputStream( path ) )
-        {
-            input.transferTo( output );
+        Path path = templateDir.resolve(template);
+        try (InputStream input = src.openStream(); OutputStream output = Files.newOutputStream(path)) {
+            input.transferTo(output);
         }
+    }
+
+    Path templateDir() {
+        return templateDir;
+    }
+
+    void delete() throws IOException {
+        for (String templateName : TEMPLATE_NAMES) {
+            Files.deleteIfExists(templateDir.resolve(templateName));
+        }
+        Files.delete(templateDir);
     }
 }

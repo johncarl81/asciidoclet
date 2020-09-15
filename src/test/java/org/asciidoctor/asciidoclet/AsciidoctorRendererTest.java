@@ -27,22 +27,22 @@ import static org.junit.Assert.assertEquals;
 public class AsciidoctorRendererTest {
 
     private AsciidoctorRenderer renderer;
-    private StubReporter reporter = new StubReporter();
+    private final StubReporter reporter = new StubReporter();
 
     @Before
     public void setup() {
-        DocletOptions options = new DocletOptions( reporter );
-        renderer = new AsciidoctorRenderer( options, reporter);
+        DocletOptions options = new DocletOptions(reporter);
+        renderer = new AsciidoctorRenderer(options, reporter);
     }
 
     @Test
     public void testAtLiteralRender() {
-        assertEquals(MARKER + "<p>{@literal @}Test</p>\n", renderer.renderDoc( "{@literal @}Test" ));
+        assertEquals(MARKER + "<p>{@literal @}Test</p>\n", renderer.renderDoc("{@literal @}Test"));
     }
 
     @Test
     public void testTagRender() {
-        String rendered = renderer.renderDoc( "input\n@tagName tagText" );
+        String rendered = renderer.renderDoc("input\n@tagName tagText");
         assertEquals(MARKER + "<p>input</p>\n@tagName tagText\n", rendered);
     }
 
@@ -55,11 +55,10 @@ public class AsciidoctorRendererTest {
     }
 
     @Test
-    public void testParameterWithoutTypeTag()
-    {
-        assertEquals( MARKER + "<p>comment</p>\n@param p description\n", renderer.renderDoc( "comment\n@param p description" ) );
-        assertEquals( MARKER + "<p>comment</p>\n@param p\n", renderer.renderDoc( "comment\n@param p" ) );
-        assertEquals( MARKER + "<p>comment</p>\n@param \n", renderer.renderDoc( "comment\n@param" ) );
+    public void testParameterWithoutTypeTag() {
+        assertEquals(MARKER + "<p>comment</p>\n@param p description\n", renderer.renderDoc("comment\n@param p description"));
+        assertEquals(MARKER + "<p>comment</p>\n@param p\n", renderer.renderDoc("comment\n@param p"));
+        assertEquals(MARKER + "<p>comment</p>\n@param \n", renderer.renderDoc("comment\n@param"));
     }
 
     @Test
@@ -72,6 +71,6 @@ public class AsciidoctorRendererTest {
         String param2Text = "<" + param2Name + "> " + param2Desc;
         String sourceText = commentText + "\n@param " + param1Text + "\n@param " + param2Text;
 
-        assertEquals(MARKER + "<p>comment</p>\n@param <T>\n@param <X> description\n", renderer.renderDoc( sourceText ) );
+        assertEquals(MARKER + "<p>comment</p>\n@param <T>\n@param <X> description\n", renderer.renderDoc(sourceText));
     }
 }
